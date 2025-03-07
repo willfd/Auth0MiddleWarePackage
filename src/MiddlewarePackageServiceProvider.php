@@ -1,10 +1,10 @@
 <?php
 
-namespace willfd\MyMiddlewarePackage;
+namespace willfd\Auth0MiddleWarePackage\src;
 
 use Illuminate\Support\ServiceProvider;
 
-class AuthorizeServiceProvider extends ServiceProvider
+class MiddlewarePackageServiceProvider extends ServiceProvider
 {
     /**
      * Indicates if loading of the provider is deferred.
