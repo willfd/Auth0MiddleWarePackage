@@ -29,9 +29,9 @@ class MiddlewarePackageServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->singleton('Auth0AuthenticateMiddleware', function ($app) {
-            return new Auth0AuthenticateMiddleware();
-        });
-//        $this->mergeConfigFrom(__DIR__.'/../config/Auth0AuthenticateMiddleware.php', 'Auth0AuthenticateMiddleware.php');
+//        $this->app->singleton('Auth0AuthenticateMiddleware', function ($app) {
+//            return new Auth0AuthenticateMiddleware();
+//        });
+        $this->mergeConfigFrom(__DIR__.'/../config/Auth0AuthenticateMiddleware.php', 'Auth0AuthenticateMiddleware');
     }
 }
