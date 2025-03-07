@@ -1,6 +1,6 @@
 <?php
 
-namespace Src;
+namespace willfd\auth0middlewarepackage\src;
 
 use Illuminate\Support\ServiceProvider;
 
