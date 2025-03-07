@@ -12,7 +12,7 @@ class Auth0AuthenticateMiddleware
         protected string $domain,
         protected string $clientId,
         protected string $cookieSecret,
-        protected string $audience,
+        protected array $audience,
     ) {
         Log::debug("Middleware Started with auth0 config", ["domain" => $this->domain, "clientId" => $this->clientId, "audience" => $this->audience]);
     }
