@@ -1,6 +1,6 @@
 <?php
 
-namespace willfd\Auth0MiddleWarePackage\src\Http\Middleware;
+namespace willfd\auth0middlewarepackage\src\Http\Middleware;
 
 use Illuminate\Support\Facades\Log;
 use Closure;
