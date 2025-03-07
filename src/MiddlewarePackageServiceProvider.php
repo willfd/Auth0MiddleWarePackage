@@ -30,9 +30,11 @@ class MiddlewarePackageServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        Log::debug('config', ['domain' => config('domain')] );
+
         $this->app->singleton('Auth0AuthenticateMiddleware', function ($app) {
-            Log::debug('config', ['domain' => config('domain')] );
-            return new Auth0AuthenticateMiddleware('test', 'test', 'test', ['test', 'test2']);
+//            Log::debug('config', ['domain' => config('domain')] );
+            return new Auth0AuthenticateMiddleware();
         });
 //        $this->mergeConfigFrom(__DIR__.'/../config/Auth0AuthenticateMiddleware.php', 'Auth0AuthenticateMiddleware');
     }
