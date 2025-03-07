@@ -30,7 +30,7 @@ class MiddlewarePackageServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->mergeConfigFrom(__DIR__.'/config/Auth0AuthenticateMiddleware.php', 'Auth0AuthenticateMiddleware');
+        $this->mergeConfigFrom(__DIR__.'/../config/Auth0AuthenticateMiddleware.php', 'Auth0AuthenticateMiddleware');
 
         Log::debug('config', ['domain' => config('domain')] );
 

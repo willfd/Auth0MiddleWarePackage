@@ -1,9 +1,8 @@
 <?php
 
 return [
-    // Configuration options here
-    // 'domain' => auth0 domain here,
-    // 'clientId' => auth0 client id,
-    // 'cookieSecret' => auth0 cookie_secret,
-    // 'audience' => auth0 audience (array),
+    'domain' => env('AUTH0_DOMAIN', ''),
+    'clientId' => env('AUTH0_CLIENT_ID', '_'),
+    'cookieSecret' => env('AUTH0_COOKIE_SECRET', '_'),
+    'audience' => explode(',', env('AUTH0_AUDIENCE', '')),
 ];
