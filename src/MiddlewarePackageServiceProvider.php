@@ -1,9 +1,8 @@
 <?php
 
-namespace willfd\auth0middlewarepackage\src;
+namespace willfd\auth0middlewarepackage;
 
 use Illuminate\Support\ServiceProvider;
-use willfd\auth0middlewarepackage\src\Http\Middleware\Auth0AuthenticateMiddleware;
 
 class MiddlewarePackageServiceProvider extends ServiceProvider
 {

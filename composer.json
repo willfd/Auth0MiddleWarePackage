@@ -9,5 +9,10 @@
     ],
     "require": {
         "laravel/framework": "^11.40"
+    },
+    "autoload": {
+        "psr-4": {
+            "willfd\\auth0middlewarepackage\\": "src"
+        }
     }
 }
