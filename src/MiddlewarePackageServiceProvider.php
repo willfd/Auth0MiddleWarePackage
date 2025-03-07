@@ -2,15 +2,32 @@
 
 namespace willfd\MyMiddlewarePackage;
 
-use Spatie\LaravelPackageTools\Package;
-use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Illuminate\Support\ServiceProvider;
 
-class MyMiddlewarePackageServiceProvider extends PackageServiceProvider
+class AuthorizeServiceProvider extends ServiceProvider
 {
-    public function configurePackage(Package $package): void
+    /**
+     * Indicates if loading of the provider is deferred.
+     *
+     * @var bool
+     */
+    protected $defer = false;
+
+    /**
+     * Bootstrap the application events.
+     */
+    public function boot()
     {
-        $package
-            ->name('my-middleware-package')
-            ->hasConfigFile();
+        $this->publishes([
+            __DIR__.'/../config/Auth0AuthenticateMiddleware.php' => config_path('Auth0AuthenticateMiddleware.php'),
+        ]);
+    }
+
+    /**
+     * Register the service provider.
+     */
+    public function register()
+    {
+        $this->mergeConfigFrom(__DIR__.'/../config/Auth0AuthenticateMiddleware.php', 'Auth0AuthenticateMiddleware');
     }
 }

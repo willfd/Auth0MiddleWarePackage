@@ -8,6 +8,6 @@
         }
     ],
     "require": {
-        "spatie/laravel-package-tools": "^1.19"
+        "laravel/framework": "^11.40"
     }
 }
