@@ -3,6 +3,7 @@
 namespace willfd\auth0middlewarepackage\src;
 
 use Illuminate\Support\ServiceProvider;
+use willfd\auth0middlewarepackage\src\Http\Middleware\Auth0AuthenticateMiddleware;
 
 class MiddlewarePackageServiceProvider extends ServiceProvider
 {
@@ -28,6 +29,9 @@ class MiddlewarePackageServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->mergeConfigFrom(__DIR__.'/../config/Auth0AuthenticateMiddleware.php', 'Auth0AuthenticateMiddleware.php');
+        $this->app->singleton('Auth0AuthenticateMiddleware', function ($app) {
+            return new Auth0AuthenticateMiddleware();
+        });
+//        $this->mergeConfigFrom(__DIR__.'/../config/Auth0AuthenticateMiddleware.php', 'Auth0AuthenticateMiddleware.php');
     }
 }
