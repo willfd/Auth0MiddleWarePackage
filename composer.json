@@ -1,0 +1,13 @@
+{
+    "name": "willfd/auth0middlewarepackage",
+    "description": "Laravel Package for Using Auth0 Authentication in the middleware",
+    "type": "library",
+    "authors": [
+        {
+            "name": "willfd"
+        }
+    ],
+    "require": {
+        "spatie/laravel-package-tools": "^1.19"
+    }
+}
