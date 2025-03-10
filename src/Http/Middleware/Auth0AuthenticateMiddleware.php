@@ -38,12 +38,12 @@ class Auth0AuthenticateMiddleware
             return new Response("No authentication config setup", 401, ['content-type' => 'application/json'] );
         }
 
-        if ( $this->audience == '' ) {
+        if ( $this->audience == [''] ) {
             Log::debug("Auth0AuthenticateMiddleware ERROR: Audience not set");
             return new Response("No authentication config setup", 401, ['content-type' => 'application/json'] );
         }
 
-        if ( count( $this->scopes) == 0 ) {
+        if ( $this->scopes == [''] ) {
             Log::debug("Auth0AuthenticateMiddleware ERROR: Scopes not set");
             return new Response("No authentication config setup", 401, ['content-type' => 'application/json'] );
         }
