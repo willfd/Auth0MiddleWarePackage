@@ -43,6 +43,7 @@ class MiddlewarePackageServiceProvider extends ServiceProvider
                 config('Auth0AuthenticateMiddleware.audience'),
                 config('Auth0AuthenticateMiddleware.requiredScopes'),
                 config('Auth0AuthenticateMiddleware.adminScopes'),
+                app('log')
             );
         });
     }
