@@ -23,6 +23,9 @@ class MiddlewarePackageServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../config/Auth0AuthenticateMiddleware.php' => config_path('Auth0AuthenticateMiddleware.php'),
         ]);
+
+        Log::debug('config', ['domain' => config('Auth0AuthenticateMiddleware.domain')] );
+
     }
 
     /**
@@ -31,8 +34,6 @@ class MiddlewarePackageServiceProvider extends ServiceProvider
     public function register()
     {
         $this->mergeConfigFrom(__DIR__.'/../config/Auth0AuthenticateMiddleware.php', 'Auth0AuthenticateMiddleware');
-
-        Log::debug('config', ['domain' => config('domain')] );
 
         $this->app->singleton('Auth0AuthenticateMiddleware', function ($app) {
 //            Log::debug('config', ['domain' => config('domain')] );
