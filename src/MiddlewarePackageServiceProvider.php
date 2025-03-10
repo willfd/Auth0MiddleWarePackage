@@ -2,6 +2,8 @@
 
 namespace willfd\auth0middlewarepackage;
 
+use Auth0\SDK\Configuration\SdkConfiguration;
+use Exception;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 use willfd\auth0middlewarepackage\Http\Middleware\Auth0AuthenticateMiddleware;
@@ -35,7 +37,9 @@ class MiddlewarePackageServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../config/Auth0AuthenticateMiddleware.php', 'Auth0AuthenticateMiddleware');
 
-        $this->app->singleton(Auth0AuthenticateMiddleware::class, function ($app) {
+        $sdkConfiguration = $this->setUpSDKConfiguration();
+
+        $this->app->singleton(Auth0AuthenticateMiddleware::class, function ($app, $sdkConfiguration) {
             return new Auth0AuthenticateMiddleware(
                 config('Auth0AuthenticateMiddleware.domain'),
                 config('Auth0AuthenticateMiddleware.clientId'),
@@ -43,8 +47,45 @@ class MiddlewarePackageServiceProvider extends ServiceProvider
                 config('Auth0AuthenticateMiddleware.audience'),
                 config('Auth0AuthenticateMiddleware.requiredScopes'),
                 config('Auth0AuthenticateMiddleware.adminScopes'),
+                $sdkConfiguration,
                 app('log')
             );
         });
+    }
+
+    protected function setUpSDKConfiguration(): ?SdkConfiguration
+    {
+        try {
+            $domain = config('Auth0AuthenticateMiddleware.domain');
+            if ($domain == '') {
+                throw new Exception("Auth0AuthenticateMiddleware ERROR: Domain not set");
+            }
+
+            $clientId = config('Auth0AuthenticateMiddleware.clientId');
+            if ($clientId == '') {
+                throw new Exception("Auth0AuthenticateMiddleware ERROR: Client Id not set");
+            }
+
+            $cookieSecret = config('Auth0AuthenticateMiddleware.cookieSecret');
+            if ($cookieSecret == '') {
+                throw new Exception("Auth0AuthenticateMiddleware ERROR: Client Secret not set");
+            }
+
+            $audience = config('Auth0AuthenticateMiddleware.audience');
+            if ($audience == ['']) {
+                throw new Exception("Auth0AuthenticateMiddleware ERROR: Audience not set");
+            }
+
+            return new SdkConfiguration([
+                'domain' => $domain,
+                'clientId' => $clientId,
+                'cookieSecret' => $cookieSecret,
+                'audience' => $audience,
+            ]);
+        }
+        catch (Exception $e) {
+            Log::error($e->getMessage());
+            return null;
+        }
     }
 }

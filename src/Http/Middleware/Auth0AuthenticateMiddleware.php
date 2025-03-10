@@ -13,8 +13,6 @@ use Psr\Log\LoggerInterface;
 
 class Auth0AuthenticateMiddleware
 {
-    protected SdkConfiguration $sdkConfiguration;
-
     /**
      * @throws ConfigurationException
      */
@@ -25,36 +23,15 @@ class Auth0AuthenticateMiddleware
         protected array $audience,
         protected array $scopes,
         protected array $adminScopes,
+        protected ?SdkConfiguration $sdkConfiguration,
         protected LoggerInterface $logger
     ) {
-        $this->sdkConfiguration = new SdkConfiguration([
-            'domain' => $this->domain,
-            'clientId' => $this->clientId,
-            'cookieSecret' => $this->cookieSecret,
-            'audience' => $this->audience,
-        ]);
+        //
     }
     public function handle(Request $request, Closure $next)
     {
-
-        if ( $this->domain == '' ) {
-            $this->logger->debug("Auth0AuthenticateMiddleware ERROR: Domain not set");
-            return new Response("No authentication config setup", 401, ['content-type' => 'application/json'] );
-        }
-
-        if ( $this->clientId == '' ) {
-            $this->logger->debug("Auth0AuthenticateMiddleware ERROR: Client Id not set");
-            return new Response("No authentication config setup", 401, ['content-type' => 'application/json'] );
-        }
-
-        if ( $this->cookieSecret == '' ) {
-            $this->logger->debug("Auth0AuthenticateMiddleware ERROR: Client Secret not set");
-            return new Response("No authentication config setup", 401, ['content-type' => 'application/json'] );
-        }
-
-        if ( $this->audience == [''] ) {
-            $this->logger->debug("Auth0AuthenticateMiddleware ERROR: Audience not set");
-            return new Response("No authentication config setup", 401, ['content-type' => 'application/json'] );
+        if( is_null( $this->sdkConfiguration ) ){
+            return new Response("Authentication Config internal ERROR", 500);
         }
 
         if ( $this->scopes == [''] ) {
@@ -73,11 +50,36 @@ class Auth0AuthenticateMiddleware
             return new Response("Token failed authentication", 401, ['content-type' => 'application/json'] );
         }
 
+        $decoded = $this->decodeToken($token);
+
+        $this->logger->debug("Auth0AuthenticateMiddleware Token Decoded: " . json_encode($decoded));
+
+        $buyerId = $decoded['buyerId'] ?? null;
+        if ( !is_string($buyerId) || empty($buyerId)) {
+            $this->logger->debug("Authentication Failed: No Buyer Id in Token");
+            return new Response("No authentication token invalid", 401, ['content-type' => 'application/json'] );
+        }
+
+        $scopes = $decoded['scope'] ?? '';
+        $tokenScopes = is_string($scopes) ? explode(' ', $scopes) : [];
+
+        if (! in_array($this->scopes, $tokenScopes, true)) {
+            $this->logger->debug("Authentication Failed: Invalid Scopes");
+            return new Response("No authentication token invalid", 401, ['content-type' => 'application/json'] );
+        }
+
+        $isAdmin = in_array($this->adminScopes, $tokenScopes, true);
+
+        $request->attributes->add([
+            'isAdmin' => $isAdmin,
+            'tokenBuyerId' => $decoded['buyerId'],
+        ]);
+
 	 // Add custom middleware logic here
         return $next($request);
     }
 
-    protected function validateToken(string $bearerToken): ?Token
+    public function validateToken(string $bearerToken): ?Token
     {
         try {
             $token = new Token($this->sdkConfiguration, $bearerToken);
@@ -89,5 +91,10 @@ class Auth0AuthenticateMiddleware
         }
 
         return $token;
+    }
+
+    public function decodeToken(Token $token): array
+    {
+        return $token->toArray();
     }
 }

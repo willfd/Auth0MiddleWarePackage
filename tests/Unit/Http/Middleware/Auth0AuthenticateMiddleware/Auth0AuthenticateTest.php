@@ -2,12 +2,11 @@
 
 namespace Tests\Unit\Http\Middleware\Auth0AuthenticateMiddleware;
 
+use Auth0\SDK\Configuration\SdkConfiguration;
+use Auth0\SDK\Mock\Event;
 use Illuminate\Http\Request;
 use PHPUnit\Framework\TestCase;
-use Illuminate\Support\Facades\Log;
 use Mockery;
-use Psr\Log\NullLogger;
-use Psr\Log\AbstractLogger;
 use Tests\Unit\TestLogger;
 use willfd\auth0middlewarepackage\Http\Middleware\Auth0AuthenticateMiddleware;
 
@@ -20,6 +19,7 @@ class Auth0AuthenticateTest extends TestCase
             return response()->json(['status' => 'success']);
         };
         $this->logger =  new TestLogger();
+        $this->mockConfig = Mockery::mock('overload:'.SdkConfiguration::class);
     }
 
     public function testHandleNoBearerToken()
@@ -42,6 +42,7 @@ class Auth0AuthenticateTest extends TestCase
             $fakeConfig['audience'],
             $fakeConfig['requiredScopes'],
             $fakeConfig['adminScopes'],
+            $this->mockConfig,
             $this->logger
         );
 

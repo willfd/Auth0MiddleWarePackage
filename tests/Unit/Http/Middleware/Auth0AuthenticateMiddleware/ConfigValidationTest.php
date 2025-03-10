@@ -2,13 +2,14 @@
 
 namespace Tests\Unit\Http\Middleware\Auth0AuthenticateMiddleware;
 
+use Auth0\SDK\Token;
 use Illuminate\Http\Request;
 use Mockery;
 use willfd\auth0middlewarepackage\Http\Middleware\Auth0AuthenticateMiddleware;
 
 class ConfigValidationTest extends Auth0AuthenticateTest
 {
-    public function testHandleNoBearerToken()
+    public function testHandleInvalidScope()
     {
         $fakeConfig = [
             'domain' => '',
@@ -21,29 +22,43 @@ class ConfigValidationTest extends Auth0AuthenticateTest
 
         $fakeRequest = Mockery::mock(Request::class);
 
-        $middleware = new Auth0AuthenticateMiddleware(
+        $middleware = Mockery::mock(Auth0AuthenticateMiddleware::class, [
             $fakeConfig['domain'],
             $fakeConfig['clientId'],
             $fakeConfig['cookieSecret'],
             $fakeConfig['audience'],
             $fakeConfig['requiredScopes'],
             $fakeConfig['adminScopes'],
+            $this->mockConfig,
             $this->logger
-        );
+            ]
+        )->makePartial();
 
         $fakeRequest->shouldReceive('bearerToken')
             ->once()
-            ->andReturn(null);
+            ->andReturn('token');
+
+        $mockedToken = Mockery::mock('overload:' . Token::Class);
+        
+        $middleware->shouldReceive('validateToken')
+            ->once()
+            ->with('token')
+            ->andReturn($mockedToken);
+
+        $middleware->shouldReceive('decodeToken')
+            ->once()
+            ->with($mockedToken)
+            ->andReturn(['buyerId' => 'buyerId', 'scope' => 'invalid:read-scope']);
 
         $response = $middleware->handle($fakeRequest, $this->closure);
 
         // check debug log is logged
-        $this->assertEquals("debug", $this->logger->logs[0]['level']);
+        $this->assertEquals("debug", $this->logger->logs[1]['level']);
         // check debug log is clear and useful
-        $this->assertEquals("Auth0AuthenticateMiddleware ERROR: Domain not set", $this->logger->logs[0]['message']);
+        $this->assertEquals("Authentication Failed: Invalid Scopes", $this->logger->logs[1]['message']);
 
         $this->assertEquals(401, $response->status());
-        $this->assertEquals("No authentication config setup", $response->getContent());
+        $this->assertEquals("No authentication token invalid", $response->getContent());
 
 //        print_r($this->logger->logs);
     }
