@@ -37,9 +37,10 @@ class MiddlewarePackageServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../config/Auth0AuthenticateMiddleware.php', 'Auth0AuthenticateMiddleware');
 
-        $sdkConfiguration = $this->setUpSDKConfiguration();
+        $sdkConfig = $this->setUpSDKConfiguration();
+        dd($sdkConfig);
 
-        $this->app->singleton(Auth0AuthenticateMiddleware::class, function ($app, $sdkConfiguration) {
+        $this->app->singleton(Auth0AuthenticateMiddleware::class, function ($app, $sdkConfig) {
             return new Auth0AuthenticateMiddleware(
                 config('Auth0AuthenticateMiddleware.domain'),
                 config('Auth0AuthenticateMiddleware.clientId'),
@@ -47,7 +48,7 @@ class MiddlewarePackageServiceProvider extends ServiceProvider
                 config('Auth0AuthenticateMiddleware.audience'),
                 config('Auth0AuthenticateMiddleware.requiredScopes'),
                 config('Auth0AuthenticateMiddleware.adminScopes'),
-                $sdkConfiguration,
+                $sdkConfig,
                 app('log')
             );
         });
