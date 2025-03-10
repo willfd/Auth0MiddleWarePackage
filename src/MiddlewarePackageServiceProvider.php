@@ -38,7 +38,8 @@ class MiddlewarePackageServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__.'/../config/Auth0AuthenticateMiddleware.php', 'Auth0AuthenticateMiddleware');
 
         $sdkConfig = $this->setUpSDKConfiguration();
-        dd($sdkConfig);
+        $sdkConfigIsSet = is_null($sdkConfig) ? 'true' : "false";
+        Log::debug('config is null'. $sdkConfigIsSet );
 
         $this->app->singleton(Auth0AuthenticateMiddleware::class, function ($app, $sdkConfig) {
             return new Auth0AuthenticateMiddleware(
