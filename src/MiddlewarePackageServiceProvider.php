@@ -40,7 +40,9 @@ class MiddlewarePackageServiceProvider extends ServiceProvider
                 config('Auth0AuthenticateMiddleware.domain'),
                 config('Auth0AuthenticateMiddleware.clientId'),
                 config('Auth0AuthenticateMiddleware.cookieSecret'),
-                config('Auth0AuthenticateMiddleware.audience')
+                config('Auth0AuthenticateMiddleware.audience'),
+                config('Auth0AuthenticateMiddleware.requiredScopes'),
+                config('Auth0AuthenticateMiddleware.adminScopes'),
             );
         });
     }
