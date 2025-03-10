@@ -2,15 +2,22 @@
 
 namespace willfd\auth0middlewarepackage\Http\Middleware;
 
-use Illuminate\Support\Facades\Log;
+use Auth0\SDK\Configuration\SdkConfiguration;
+use Auth0\SDK\Exception\ConfigurationException;
+use Auth0\SDK\Token;
 use Closure;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Psr\Log\LoggerInterface;
 
 class Auth0AuthenticateMiddleware
 {
+    protected SdkConfiguration $sdkConfiguration;
 
+    /**
+     * @throws ConfigurationException
+     */
     public function __construct(
         protected string $domain,
         protected string $clientId,
@@ -20,7 +27,12 @@ class Auth0AuthenticateMiddleware
         protected array $adminScopes,
         protected LoggerInterface $logger
     ) {
-//        $this->logger->debug("Middleware Started with auth0 config", ["domain" => $this->domain, "clientId" => $this->clientId, "audience" => $this->audience, "scopes" => $this->scopes, "adminScopes" => $this->adminScopes]);
+        $this->sdkConfiguration = new SdkConfiguration([
+            'domain' => $this->domain,
+            'clientId' => $this->clientId,
+            'cookieSecret' => $this->cookieSecret,
+            'audience' => $this->audience,
+        ]);
     }
     public function handle(Request $request, Closure $next)
     {
@@ -55,7 +67,27 @@ class Auth0AuthenticateMiddleware
             return new Response("No authentication token provided", 401, ['content-type' => 'application/json'] );
         }
 
+        $token = $this->validateToken($bearerToken);
+        if ( !$token ) {
+            $this->logger->debug("Authentication Failed: Token Validation Failed");
+            return new Response("Token failed authentication", 401, ['content-type' => 'application/json'] );
+        }
+
 	 // Add custom middleware logic here
         return $next($request);
+    }
+
+    protected function validateToken(string $bearerToken): ?Token
+    {
+        try {
+            $token = new Token($this->sdkConfiguration, $bearerToken);
+
+            $token->verify();
+            $token->validate();
+        } catch (Exception) {
+            return null;
+        }
+
+        return $token;
     }
 }
