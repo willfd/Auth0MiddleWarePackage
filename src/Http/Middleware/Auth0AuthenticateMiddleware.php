@@ -53,15 +53,6 @@ class Auth0AuthenticateMiddleware
 
         $this->logger->debug("Auth0AuthenticateMiddleware Token Decoded: " . json_encode($decoded));
 
-        $buyerId = $decoded['buyerId'] ?? null;
-        if ( !is_string($buyerId) || empty($buyerId)) {
-            $this->logger->debug("Authentication Failed: No Buyer Id in Token");
-            return new Response("No authentication token invalid", 401, ['content-type' => 'application/json'] );
-        }
-
-        $scopes = $decoded['scope'] ?? '';
-        $tokenScopes = is_string($scopes) ? explode(' ', $scopes) : [];
-
         $isAdmin = false;
         $seperatedScope = explode(':', $requiredScope);
 
@@ -73,6 +64,15 @@ class Auth0AuthenticateMiddleware
             }
         }
 
+        $buyerId = $decoded['buyerId'] ?? null;
+        if ( !$isAdmin && (!is_string($buyerId) || empty($buyerId)) ) {
+            $this->logger->debug("Authentication Failed: No Buyer Id in Token");
+            return new Response("No authentication token invalid", 401, ['content-type' => 'application/json'] );
+        }
+
+        $scopes = $decoded['scope'] ?? '';
+        $tokenScopes = is_string($scopes) ? explode(' ', $scopes) : [];
+
         if ( !in_array($requiredScope, $tokenScopes, true) && !$isAdmin ) {
             $this->logger->debug("Authentication Failed: Invalid Scopes");
             return new Response("No authentication token invalid" , 401, ['content-type' => 'application/json'] );
@@ -81,7 +81,7 @@ class Auth0AuthenticateMiddleware
 
         $request->attributes->add([
             'isAdmin' => $isAdmin,
-            'tokenBuyerId' => $decoded['buyerId'],
+            'tokenBuyerId' => $decoded['buyerId'] ?? null,
         ]);
 
 	 // Add custom middleware logic here

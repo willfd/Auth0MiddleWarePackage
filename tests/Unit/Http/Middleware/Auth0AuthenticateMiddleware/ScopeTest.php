@@ -164,4 +164,104 @@ class ScopeTest extends Auth0AuthenticateTest
         $this->assertFalse($this->capturedRequest->attributes->get('isAdmin'));
         $this->assertEquals('buyerId', $this->capturedRequest->attributes->get('tokenBuyerId'));
     }
+    public function testHandleValidScopeMultipleInvalidAdminScopes()
+    {
+        $fakeConfig = [
+            'domain' => '',
+            'clientId' => 'clientId123',
+            'cookieSecret' => 'secret123',
+            'adminScopes' => ['admin:fake-test','admin:test-fake'],
+            'audience' => ['fake-audience'],
+        ];
+
+        $fakeRequest = Request::create('/', 'GET');
+        $fakeRequest->headers->set('Authorization', 'Bearer token');
+        $fakeRequest->attributes->set('scope', 'read:app-test');
+
+        $middleware = Mockery::mock(Auth0AuthenticateMiddleware::class, [
+                $fakeConfig['domain'],
+                $fakeConfig['clientId'],
+                $fakeConfig['cookieSecret'],
+                $fakeConfig['audience'],
+                $fakeConfig['adminScopes'],
+                $this->mockConfig,
+                $this->logger
+            ]
+        )->makePartial();
+
+        $mockedToken = Mockery::mock('overload:' . Token::Class);
+
+        $middleware->shouldReceive('validateToken')
+            ->once()
+            ->with('token')
+            ->andReturn($mockedToken);
+
+        $middleware->shouldReceive('decodeToken')
+            ->once()
+            ->with($mockedToken)
+            ->andReturn(['buyerId' => 'buyerId', 'scope' => 'read:app-test']);
+
+        $response = $middleware->handle($fakeRequest, $this->closure, 'read:app-test');
+
+        $this->assertEquals(200, $response->status());
+
+        // Check if the middleware added attributes correctly
+        $this->assertTrue($this->capturedRequest->attributes->has('isAdmin'));
+        $this->assertTrue($this->capturedRequest->attributes->has('tokenBuyerId'));
+
+        // Assert values of attributes
+        $this->assertFalse($this->capturedRequest->attributes->get('isAdmin'));
+        $this->assertEquals('buyerId', $this->capturedRequest->attributes->get('tokenBuyerId'));
+    }
+
+    public function testHandleValidScopeMultipleAdminScopesOneValid()
+    {
+        $fakeConfig = [
+            'domain' => '',
+            'clientId' => 'clientId123',
+            'cookieSecret' => 'secret123',
+            'adminScopes' => ['admin:fake-test','admin:app-test'],
+            'audience' => ['fake-audience'],
+        ];
+
+        $fakeRequest = Request::create('/', 'GET');
+        $fakeRequest->headers->set('Authorization', 'Bearer token');
+        $fakeRequest->attributes->set('scope', 'read:app-test');
+
+        $middleware = Mockery::mock(Auth0AuthenticateMiddleware::class, [
+                $fakeConfig['domain'],
+                $fakeConfig['clientId'],
+                $fakeConfig['cookieSecret'],
+                $fakeConfig['audience'],
+                $fakeConfig['adminScopes'],
+                $this->mockConfig,
+                $this->logger
+            ]
+        )->makePartial();
+
+        $mockedToken = Mockery::mock('overload:' . Token::Class);
+
+        $middleware->shouldReceive('validateToken')
+            ->once()
+            ->with('token')
+            ->andReturn($mockedToken);
+
+        $middleware->shouldReceive('decodeToken')
+            ->once()
+            ->with($mockedToken)
+            ->andReturn(['buyerId' => 'buyerId', 'scope' => 'read:app-test']);
+
+        $response = $middleware->handle($fakeRequest, $this->closure, 'read:app-test');
+
+        $this->assertEquals(200, $response->status());
+
+        // Check if the middleware added attributes correctly
+        $this->assertTrue($this->capturedRequest->attributes->has('isAdmin'));
+        $this->assertTrue($this->capturedRequest->attributes->has('tokenBuyerId'));
+
+        // Assert values of attributes
+        $this->assertTrue($this->capturedRequest->attributes->get('isAdmin'));
+        $this->assertEquals('buyerId', $this->capturedRequest->attributes->get('tokenBuyerId'));
+    }
+
 }
