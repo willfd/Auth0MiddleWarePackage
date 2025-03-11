@@ -21,20 +21,19 @@ class Auth0AuthenticateMiddleware
         protected string $clientId,
         protected string $cookieSecret,
         protected array $audience,
-        protected array $scopes,
         protected array $adminScopes,
         protected ?SdkConfiguration $sdkConfiguration,
         protected LoggerInterface $logger
     ) {
         //
     }
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next, string $requiredScope)
     {
         if( is_null( $this->sdkConfiguration ) ){
             return new Response("Authentication Config internal ERROR", 500);
         }
 
-        if ( $this->scopes == [''] ) {
+        if ( $requiredScope == '' ) {
             $this->logger->debug("Auth0AuthenticateMiddleware ERROR: Scopes not set");
             return new Response("No authentication config setup", 401, ['content-type' => 'application/json'] );
         }
@@ -63,12 +62,22 @@ class Auth0AuthenticateMiddleware
         $scopes = $decoded['scope'] ?? '';
         $tokenScopes = is_string($scopes) ? explode(' ', $scopes) : [];
 
-        if (! in_array($this->scopes, $tokenScopes, true)) {
-            $this->logger->debug("Authentication Failed: Invalid Scopes");
-            return new Response("No authentication token invalid", 401, ['content-type' => 'application/json'] );
+        $isAdmin = false;
+        $seperatedScope = explode(':', $requiredScope);
+
+        // Check Admin Scopes for scope with matching second half after : to required scope
+        foreach ( $this->adminScopes as $adminScope){
+            $seperatedAdminScope = explode(':', $adminScope);
+            if(count($seperatedAdminScope) > 1 && $seperatedAdminScope[1] == $seperatedScope[1]){
+                $isAdmin = true;
+            }
         }
 
-        $isAdmin = in_array($this->adminScopes, $tokenScopes, true);
+        if ( !in_array($requiredScope, $tokenScopes, true) && !$isAdmin ) {
+            $this->logger->debug("Authentication Failed: Invalid Scopes");
+            return new Response("No authentication token invalid" , 401, ['content-type' => 'application/json'] );
+        }
+
 
         $request->attributes->add([
             'isAdmin' => $isAdmin,
