@@ -89,10 +89,17 @@ class AuthenticationService
      */
     public function validateToken(?SdkConfiguration $sdkConfiguration, string $bearerToken): ?Token
     {
-        $token = new Token($sdkConfiguration, $bearerToken);
+        try{
+            $token = new Token($sdkConfiguration, $bearerToken);
 
-        $token->verify();
-        $token->validate();
+            $token->verify();
+            $token->validate();
+        }
+        catch(InvalidTokenException $e){
+            $this->logger->debug("Authentication Token Validation Failed: ".$e->getMessage());
+            throw $e;
+        }
+
     }
 
     public function decodeToken(Token $token): array
