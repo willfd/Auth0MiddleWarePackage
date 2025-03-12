@@ -1,4 +1,5 @@
 # Auth0MiddlewarePackage
+Simple package to allow for auth0 middleware authentication based on scopes and buyerIds
 
 ## Package Implementation
 
