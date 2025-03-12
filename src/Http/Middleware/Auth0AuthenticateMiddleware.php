@@ -3,107 +3,58 @@
 namespace willfd\auth0middlewarepackage\Http\Middleware;
 
 use Auth0\SDK\Configuration\SdkConfiguration;
-use Auth0\SDK\Exception\ConfigurationException;
-use Auth0\SDK\Token;
+use Auth0\SDK\Exception\InvalidTokenException;
 use Closure;
-use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Psr\Log\LoggerInterface;
+use willfd\auth0middlewarepackage\Exceptions\AuthenticationException;
+use willfd\auth0middlewarepackage\Exceptions\TokenConfigurationException;
+use willfd\auth0middlewarepackage\Services\AuthenticationService;
+use willfd\auth0middlewarepackage\Exceptions\ConfigurationException;
+
 
 class Auth0AuthenticateMiddleware
 {
-    /**
-     * @throws ConfigurationException
-     */
+    protected array $errorResponseHeaders;
     public function __construct(
-        protected string $domain,
-        protected string $clientId,
-        protected string $cookieSecret,
-        protected array $audience,
+        protected AuthenticationService $authenticationService,
         protected array $adminScopes,
         protected ?SdkConfiguration $sdkConfiguration,
         protected LoggerInterface $logger
     ) {
-        //
+        $this->errorResponseHeaders = ['content-type' => 'application/json'];
     }
-    public function handle(Request $request, Closure $next, string $requiredScope)
-    {
-        if( is_null( $this->sdkConfiguration ) ){
-            return new Response("Authentication Config internal ERROR", 500);
+    public function handle(Request $request, Closure $next, string $requiredScope){
+
+        try{
+            $request = $this->authenticationService->authenticateScopesAndBuyer($request, $this->sdkConfiguration, $requiredScope, $this->adminScopes);
+            return $next($request);
         }
-
-        if ( $requiredScope == '' ) {
-            $this->logger->debug("Auth0AuthenticateMiddleware ERROR: Scopes not set");
-            return new Response("No authentication config setup", 401, ['content-type' => 'application/json'] );
+        catch(AuthenticationException $e){
+            return new Response(
+                "Authentication Fail - failed authentication",
+                403,
+                $this->errorResponseHeaders
+            );
+        } catch (ConfigurationException $e) {
+            return new Response(
+                "Authentication Fail - Config internal ERROR",
+                500,
+                $this->errorResponseHeaders
+            );
+        } catch (TokenConfigurationException $e) {
+            return new Response(
+                "Authentication Fail - invalid request",
+                401,
+                $this->errorResponseHeaders
+            );
+        } catch (InvalidTokenException $e) {
+            return new Response(
+                "Authentication Fail - failed Auth0 authentication",
+                403,
+                $this->errorResponseHeaders
+            );
         }
-
-        $bearerToken = $request->bearerToken();
-        if ($bearerToken === null) {
-            return new Response("No authentication token provided", 401, ['content-type' => 'application/json'] );
-        }
-
-        $token = $this->validateToken($bearerToken);
-        if ( !$token ) {
-            $this->logger->debug("Authentication Failed: Token Validation Failed");
-            return new Response("Token failed authentication", 401, ['content-type' => 'application/json'] );
-        }
-
-        $decoded = $this->decodeToken($token);
-
-        $this->logger->debug("Auth0AuthenticateMiddleware Token Decoded: " . json_encode($decoded));
-
-        $isAdmin = false;
-        $seperatedScope = explode(':', $requiredScope);
-
-        // Check Admin Scopes for scope with matching second half after : to required scope
-        foreach ( $this->adminScopes as $adminScope){
-            $seperatedAdminScope = explode(':', $adminScope);
-            if(count($seperatedAdminScope) > 1 && $seperatedAdminScope[1] == $seperatedScope[1]){
-                $isAdmin = true;
-            }
-        }
-
-        $buyerId = $decoded['buyerId'] ?? null;
-        if ( !$isAdmin && (!is_string($buyerId) || empty($buyerId)) ) {
-            $this->logger->debug("Authentication Failed: No Buyer Id in Token");
-            return new Response("No authentication token invalid", 401, ['content-type' => 'application/json'] );
-        }
-
-        $scopes = $decoded['scope'] ?? '';
-        $tokenScopes = is_string($scopes) ? explode(' ', $scopes) : [];
-
-        if ( !in_array($requiredScope, $tokenScopes, true) && !$isAdmin ) {
-            $this->logger->debug("Authentication Failed: Invalid Scopes");
-            return new Response("No authentication token invalid" , 401, ['content-type' => 'application/json'] );
-        }
-
-
-        $request->attributes->add([
-            'isAdmin' => $isAdmin,
-            'tokenBuyerId' => $decoded['buyerId'] ?? null,
-        ]);
-
-	 // Add custom middleware logic here
-        return $next($request);
-    }
-
-    public function validateToken(string $bearerToken): ?Token
-    {
-        try {
-            $token = new Token($this->sdkConfiguration, $bearerToken);
-
-            $token->verify();
-            $token->validate();
-        } catch (Exception) {
-            return null;
-        }
-
-        return $token;
-    }
-
-    public function decodeToken(Token $token): array
-    {
-        return $token->toArray();
     }
 }
