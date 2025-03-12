@@ -7,6 +7,7 @@ use Exception;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 use willfd\auth0middlewarepackage\Http\Middleware\Auth0AuthenticateMiddleware;
+use willfd\auth0middlewarepackage\Services\AuthenticationService;
 
 class MiddlewarePackageServiceProvider extends ServiceProvider
 {
@@ -15,12 +16,12 @@ class MiddlewarePackageServiceProvider extends ServiceProvider
      *
      * @var bool
      */
-    protected $defer = false;
+    protected bool $defer = false;
 
     /**
      * Bootstrap the application events.
      */
-    public function boot()
+    public function boot(): void
     {
         $this->publishes([
             __DIR__.'/../config/Auth0AuthenticateMiddleware.php' => config_path('Auth0AuthenticateMiddleware.php'),
@@ -33,7 +34,7 @@ class MiddlewarePackageServiceProvider extends ServiceProvider
     /**
      * Register the service provider.
      */
-    public function register()
+    public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/Auth0AuthenticateMiddleware.php', 'Auth0AuthenticateMiddleware');
 
@@ -41,10 +42,7 @@ class MiddlewarePackageServiceProvider extends ServiceProvider
 
         $this->app->singleton(Auth0AuthenticateMiddleware::class, function ($app) use ($sdkConfig) {
             return new Auth0AuthenticateMiddleware(
-                config('Auth0AuthenticateMiddleware.domain'),
-                config('Auth0AuthenticateMiddleware.clientId'),
-                config('Auth0AuthenticateMiddleware.cookieSecret'),
-                config('Auth0AuthenticateMiddleware.audience'),
+                new AuthenticationService( app('log') ),
                 config('Auth0AuthenticateMiddleware.adminScopes'),
                 $sdkConfig,
                 app('log')
