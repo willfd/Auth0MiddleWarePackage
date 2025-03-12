@@ -53,11 +53,18 @@ class AuthenticationService
         $isAdmin = false;
         $seperatedScope = explode(':', $requiredScope);
 
+        $scopes = $decoded['scope'] ?? '';
+        $tokenScopes = is_string($scopes) ? explode(' ', $scopes) : [];
+
         // Check Admin Scopes for scope with matching second half after : to required scope
         foreach ( $adminScopes as $adminScope){
             $seperatedAdminScope = explode(':', $adminScope);
+            // check if admin scope exists for required scope
             if(count($seperatedAdminScope) > 1 && $seperatedAdminScope[1] == $seperatedScope[1]){
-                $isAdmin = true;
+                // check if admin scope in token scopes
+                if( in_array( $adminScope, $tokenScopes) ){
+                    $isAdmin = true;
+                }
             }
         }
 
@@ -67,8 +74,7 @@ class AuthenticationService
             throw new AuthenticationException("Buyer Id not set and not admin");
         }
 
-        $scopes = $decoded['scope'] ?? '';
-        $tokenScopes = is_string($scopes) ? explode(' ', $scopes) : [];
+
 
         if ( !in_array($requiredScope, $tokenScopes, true) && !$isAdmin ) {
             $this->logger->debug("Authentication Failed: Invalid Scopes");
