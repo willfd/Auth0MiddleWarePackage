@@ -35,6 +35,15 @@ AUTH0_AUDIENCE=        STRING                   ie tmf-api
 AUTH0_REQUIRED_SCOPES= STRING COMMA SEPERATED   ie write:app-example,read:app-example
 AUTH0_ADMIN_SCOPES=    STRING COMMA SEPERATED   ie admin:app-example
 ```
+### Add Provider
+In boostrap/providers.php, add the packages provider class
+```php
+use willfd\auth0middlewarepackage\MiddlewarePackageServiceProvider;
+...
+return [
+    MiddlewarePackageServiceProvider::class
+];
+```
 
 #### Set Middleware Alias (optional)
 In bootstrap/app.php add below. The alias can be called anything, the alias shall be used to reference the middleware within the routes
