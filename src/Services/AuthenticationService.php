@@ -94,6 +94,8 @@ class AuthenticationService
 
             $token->verify();
             $token->validate();
+
+            return $token;
         }
         catch(InvalidTokenException $e){
             $this->logger->debug("Authentication Token Validation Failed: ".$e->getMessage());
