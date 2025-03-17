@@ -5,19 +5,10 @@ Simple package to allow for auth0 middleware authentication based on scopes and 
 
 ### Add Package to app
 #### Add package to composer.json
-Add Repo package is located at for composer to find package
-```json
-"repositories": [
-    {
-      "url": "https://github.com/willfd/Auth0MiddleWarePackage",
-      "type": "git"
-    }
-],
-```
 Add package requirement
 ```json
 "require-dev": {
-  "willfd/auth0middlewarepackage": "dev-main"
+  "willfd/auth0middlewarepackage": "^1.0.0"
 },
 ```
 

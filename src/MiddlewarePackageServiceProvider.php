@@ -26,9 +26,6 @@ class MiddlewarePackageServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../config/Auth0AuthenticateMiddleware.php' => config_path('Auth0AuthenticateMiddleware.php'),
         ]);
-
-        Log::debug('config', ['domain' => config('Auth0AuthenticateMiddleware.domain')] );
-
     }
 
     /**
